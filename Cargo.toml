@@ -13,6 +13,7 @@ categories = ["algorithms", "cryptography", "command-line-utilities"]
 
 [dependencies]
 clap = { version = "4.4.16", features = ["cargo"] }
+rug = "1.23"
 
 [dev-dependencies]
 assert_cmd = "2.0.13"
