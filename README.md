@@ -17,7 +17,7 @@ For more usage information, run `./poly1305-{gen,check} --help`.
 
 ## Testing
 
-Run `cargo test` to check if `./poly1305-{gen,check}` produce the right output.
+Run `cargo test` to check if `./poly1305-{gen,check}` produce the right output, comparing it with `openssl`.
 
 ## Project structure
 
