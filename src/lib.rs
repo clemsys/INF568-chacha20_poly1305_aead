@@ -41,7 +41,8 @@ pub mod lib {
         mask & r
     }
 
-    pub fn poly1305_tag(message: &Vec<Integer>, r: &Integer, s: &Integer, p: &Integer) -> Integer {
+    /// computes the expected poly1305 tag
+    pub fn poly1305_tag(message: &[Integer], r: &Integer, s: &Integer, p: &Integer) -> Integer {
         let acc = message
             .iter()
             .fold(Integer::from(0), |acc, i| ((acc + i) * r) % p);
@@ -49,6 +50,7 @@ pub mod lib {
         (acc + s) % (Integer::from(1) << 128)
     }
 
+    /// generates the poly1305 tag for a given file and key
     pub fn poly1305_gen(filename: &str, key: &str) -> Integer {
         let (r, s) = extract_rs(key);
         let r = clamp_r(&r); // keep r immutable
@@ -69,6 +71,7 @@ pub mod lib {
         poly1305_tag(&message, &r, &s, &p)
     }
 
+    /// checks if the provided poly1305 tag for a given file and key is correct
     pub fn poly1305_check(filename: &str, key: &str, auth_tag: &str) -> bool {
         let tag = poly1305_gen(filename, key);
         let auth_tag_int = integer_from_le_str(auth_tag);

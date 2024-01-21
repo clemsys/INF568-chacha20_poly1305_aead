@@ -17,3 +17,7 @@ rug = "1.23"
 
 [dev-dependencies]
 assert_cmd = "2.0.13"
+
+[profile.release]
+strip = true
+lto = true

@@ -7,14 +7,18 @@ Description: implementation of poly1305 (see: [RFC 8439](https://datatracker.iet
 
 Build the project using `make`.
 
-This calls `cargo build --release` and copies `target/release/poly1305-{gen,check}` in the project root.
+This calls `cargo build --release` and copies binaries from `target/release/` into the project root.
 
 ## Running
 
-Run using `./poly1305-{gen,check}`.
+Run using `./poly1305-gen` or `./poly1305-check`.
 
 For more usage information, run `./poly1305-{gen,check} --help`.
 
 ## Testing
 
-<WIP>
+Run `cargo test` to check if `./poly1305-{gen,check}` produce the right output.
+
+## Project structure
+
+The core of the project can be found in `src/lib.rs`. The files `src/bin/poly1305_{check,gen}` are here to produce binaries, so they only contain a main functions, which call `lib.rs` directly.

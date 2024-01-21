@@ -1,4 +1,5 @@
 use clap::{arg, command, value_parser};
+use poly1305::lib::poly1305_check;
 
 fn main() {
     // deal with command line arguments
@@ -25,7 +26,7 @@ fn main() {
     let filename = matches.get_one::<String>("FILE").unwrap();
     let auth_tag = matches.get_one::<String>("TAG").unwrap();
 
-    let check = poly1305::lib::poly1305_check(&filename, &key, &auth_tag);
+    let check = poly1305_check(filename, key, auth_tag);
 
     print!("{}", if check { "ACCEPT" } else { "REJECT" });
 }
