@@ -33,7 +33,7 @@ fn accept_short_text_rfc() -> TestResult {
 
     cmd.args([
         "85d6be7857556d337f4452fe42d506a80103808afb0db2fd4abff6af4149f51b",
-        "tests/samples/short-text.txt",
+        "tests/samples/poly1305/short-text.txt",
         "a8061dc1305136c6c22b8baf0c0127a9",
     ])
     .assert()
@@ -48,7 +48,7 @@ fn reject_short_text_rfc() -> TestResult {
 
     cmd.args([
         "85d6be7857556d337f4452fe42d506a80103808afb0db2fd4abff6af4149f51b",
-        "tests/samples/short-text.txt",
+        "tests/samples/poly1305/short-text.txt",
         "a8061dc1305136c6e22b8baf0c0127a9",
     ])
     .assert()
@@ -61,7 +61,7 @@ fn reject_short_text_rfc() -> TestResult {
 fn accpt_short_text() -> TestResult {
     run(
         "85d6be7857556d337f4452fe42d506a80103808afb0db2fd4abff6af4149f51b",
-        "tests/samples/short-text.txt",
+        "tests/samples/poly1305/short-text.txt",
     )
 }
 
@@ -69,16 +69,16 @@ fn accpt_short_text() -> TestResult {
 fn correct_short_binary() -> TestResult {
     run(
         "9288a877ee833095bc19d8e47494a203b39fd22f0049de7f208c73f3774c5be4",
-        "tests/samples/short-binary.bin",
+        "tests/samples/poly1305/short-binary.bin",
     )
 }
 
 #[test]
 fn accept_urandoms() -> TestResult {
-    let binding = std::fs::read_to_string("tests/samples/urandom_keys").unwrap();
+    let binding = std::fs::read_to_string("tests/samples/poly1305/urandom_keys").unwrap();
     let keys: Vec<&str> = binding.lines().collect();
     for (i, key) in keys.iter().enumerate() {
-        run(key, &format!("tests/samples/urandom{}", i)).unwrap();
+        run(key, &format!("tests/samples/poly1305/urandom{}", i)).unwrap();
     }
     Ok(())
 }

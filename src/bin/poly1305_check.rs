@@ -1,5 +1,5 @@
 use clap::{arg, command, value_parser};
-use poly1305::lib::poly1305_check;
+use poly1305::lib::poly1305::poly1305_check;
 
 fn main() {
     // deal with command line arguments

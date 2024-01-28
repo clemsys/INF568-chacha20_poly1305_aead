@@ -1,5 +1,5 @@
 use clap::{arg, command, value_parser};
-use poly1305::lib::{le_string_from_integer, poly1305_gen};
+use poly1305::lib::poly1305::{le_string_from_integer, poly1305_gen};
 
 fn main() {
     // deal with command line arguments

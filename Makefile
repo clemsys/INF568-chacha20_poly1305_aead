@@ -10,6 +10,5 @@ copy:
 
 clean:
 	cargo clean
-	rm chacha20
-	rm poly1305-gen
-	rm poly1305-check
+	rm chacha20 poly1305-gen poly1305-check
+
