@@ -1,3 +1,4 @@
 /target
 /poly1305-gen
 /poly1305-check
+/chacha20
