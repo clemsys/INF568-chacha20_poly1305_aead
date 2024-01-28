@@ -1,5 +1,5 @@
 use rug::{integer::Order, Integer};
-use std::{fmt::Write, fs::File, io::Read};
+use std::fmt::Write;
 
 const P_STR: &str = "3fffffffffffffffffffffffffffffffb";
 const R_CLAMP_MASK_STR: &str = "0ffffffc0ffffffc0ffffffc0fffffff";
@@ -14,8 +14,8 @@ pub fn le_string_from_integer(i: &Integer) -> String {
         })
 }
 
-/// converts a little-endian hexadecimal string to an integer
-fn integer_from_le_str(s: &str) -> Integer {
+/// converts a little-endian hexadecimal string to a bytes array
+fn bytes_from_le_str(s: &str) -> Vec<u8> {
     assert!(s.len() % 2 == 0);
     let bytes = s
         .chars()
@@ -24,14 +24,19 @@ fn integer_from_le_str(s: &str) -> Integer {
         .map(|chunk| chunk.iter().collect::<String>())
         .map(|byte| u8::from_str_radix(&byte, 16).unwrap())
         .collect::<Vec<u8>>();
-    Integer::from_digits(&bytes, Order::Lsf)
+    bytes
+}
+
+/// converts a little-endian hexadecimal string to an integer
+fn integer_from_le_str(s: &str) -> Integer {
+    Integer::from_digits(&bytes_from_le_str(s), Order::Lsf)
 }
 
 /// extracts r and s from the key (64-character little-endian hexadecimal string)
-fn extract_rs(key: &str) -> (Integer, Integer) {
+fn extract_rs(key: &[u8]) -> (Integer, Integer) {
     (
-        integer_from_le_str(&key[0..32]),
-        integer_from_le_str(&key[32..64]),
+        Integer::from_digits(&key[0..16], Order::Lsf),
+        Integer::from_digits(&key[16..32], Order::Lsf),
     )
 }
 
@@ -41,7 +46,7 @@ fn clamp_r(r: &Integer) -> Integer {
 }
 
 /// computes the expected poly1305 tag
-pub fn poly1305_tag(message: &[Integer], r: &Integer, s: &Integer, p: &Integer) -> Integer {
+fn poly1305_tag_integers(message: &[Integer], r: &Integer, s: &Integer, p: &Integer) -> Integer {
     let acc = message
         .iter()
         .fold(Integer::from(0), |acc, i| ((acc + i) * r) % p);
@@ -49,25 +54,26 @@ pub fn poly1305_tag(message: &[Integer], r: &Integer, s: &Integer, p: &Integer) 
     (acc + s) % (Integer::from(1) << 128)
 }
 
-/// generates the poly1305 tag for a given file and key
-pub fn poly1305_gen(filename: &str, key: &str) -> Integer {
-    let (r, s) = extract_rs(key);
-    let r = clamp_r(&r); // keep r immutable
+pub fn poly1305_tag(message: &[u8], key: &[u8]) -> Integer {
+    let p = Integer::from_str_radix(P_STR, 16).unwrap();
 
-    let mut file = File::open(filename).unwrap();
-    let mut file_bytes: Vec<u8> = Vec::new();
-    file.read_to_end(&mut file_bytes).unwrap();
-
-    let message: Vec<Integer> = file_bytes
+    let message_integers: Vec<Integer> = message
         .chunks(16)
         .map(|chunk| {
             Integer::from_digits(chunk, Order::Lsf) + (Integer::from(1) << (chunk.len() << 3))
         })
         .collect();
 
-    let p = Integer::from_str_radix(P_STR, 16).unwrap();
+    let (r, s) = extract_rs(key);
+    let r = clamp_r(&r);
 
-    poly1305_tag(&message, &r, &s, &p)
+    poly1305_tag_integers(&message_integers, &r, &s, &p)
+}
+
+/// generates the poly1305 tag for a given file and key
+pub fn poly1305_gen(filename: &str, key: &str) -> Integer {
+    let file_bytes: Vec<u8> = std::fs::read(filename).expect("Could not read file");
+    poly1305_tag(&file_bytes, &bytes_from_le_str(key))
 }
 
 /// checks if the provided poly1305 tag for a given file and key is correct

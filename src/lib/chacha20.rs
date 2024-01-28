@@ -32,17 +32,31 @@ fn chacha20_quarter_round(state: &mut State, i: usize, j: usize, k: usize, l: us
 fn bytes_from_state(state: &State) -> [u8; 64] {
     let mut result = [0u8; 64];
     for i in 0..64 {
-        result[i] = (state[i >> 2] >> ((i % 4) << 3)) as u8;
+        result[i] = ((state[i >> 2] >> ((i % 4) << 3)) & 0xff) as u8;
     }
     result
 }
 
-fn chacha20_block(key: &Key, nonce: &Nonce, count: u32) -> Block {
+pub fn chacha20_block(key: &Key, nonce: &Nonce, count: u32) -> Block {
     let mut state: State = [
-        0x61707865, 0x3320646e, 0x79622d32, 0x6b206574, key[0], key[1], key[2], key[3], key[4],
-        key[5], key[6], key[7], count, nonce[0], nonce[1], nonce[2],
+        0x6170_7865,
+        0x3320_646e,
+        0x7962_2d32,
+        0x6b20_6574,
+        key[0],
+        key[1],
+        key[2],
+        key[3],
+        key[4],
+        key[5],
+        key[6],
+        key[7],
+        count,
+        nonce[0],
+        nonce[1],
+        nonce[2],
     ];
-    let initial_state = state.clone();
+    let initial_state = state; // copy (no need to clone)
     for _ in 0..10 {
         chacha20_quarter_round(&mut state, 0, 4, 8, 12);
         chacha20_quarter_round(&mut state, 1, 5, 9, 13);
@@ -62,7 +76,11 @@ fn chacha20_block(key: &Key, nonce: &Nonce, count: u32) -> Block {
 pub fn chacha20(key: &Key, counter: u32, nonce: &Nonce, plaintext: &[u8]) -> Vec<u8> {
     let mut ciphertext = plaintext.to_vec();
     for (i, chunk) in ciphertext.chunks_mut(64).enumerate() {
-        let key_stream = chacha20_block(key, nonce, counter + (i as u32));
+        let key_stream = chacha20_block(
+            key,
+            nonce,
+            counter + u32::try_from(i).expect("Plaintext too long"),
+        ); // plaintext max size is 2TB
         for (a, b) in chunk.iter_mut().zip(&key_stream) {
             *a ^= b;
         }
