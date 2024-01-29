@@ -69,12 +69,11 @@ fn main() {
     let ciphertext = std::fs::read(ciphertext_file).expect("Ciphertext file not found");
 
     let auth_tag_str = matches.get_one::<String>("TAG").unwrap();
-    let auth_tag = integer_from_le_str(&auth_tag_str);
+    let auth_tag = integer_from_le_str(auth_tag_str);
 
-    match aead_chacha20_poly1305_unwrap(&ad, &key, &nonce, &ciphertext, &auth_tag) {
-        Some(plaintext) => {
-            print!("{}", std::str::from_utf8(&plaintext).unwrap());
-        }
-        None => {}
+    if let Some(plaintext) =
+        aead_chacha20_poly1305_unwrap(&ad, &key, &nonce, &ciphertext, &auth_tag)
+    {
+        print!("{}", std::str::from_utf8(&plaintext).unwrap());
     }
 }

@@ -72,6 +72,6 @@ fn main() {
 
     let (ciphertext, tag) = aead_chacha20_poly1305_wrap(&ad, &key, &nonce, &plaintext);
 
-    std::fs::write(cipher_file, &ciphertext).expect("Could not write output in cipher file");
+    std::fs::write(cipher_file, ciphertext).expect("Could not write output in cipher file");
     print!("{}", le_string_from_integer(&tag));
 }

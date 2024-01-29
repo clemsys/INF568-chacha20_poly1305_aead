@@ -4,7 +4,7 @@ use super::{
 };
 use rug::Integer;
 
-pub fn poly1305_key_gen(key: &Key, nonce: &Nonce) -> [u8; 32] {
+fn poly1305_key_gen(key: &Key, nonce: &Nonce) -> [u8; 32] {
     chacha20_block(key, nonce, 0)[0..32].try_into().unwrap()
 }
 
