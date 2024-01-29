@@ -12,11 +12,7 @@ const fn padded_size_16(size: usize) -> usize {
     (size + (1 << 4) - 1) & (usize::MAX - 0xf)
 }
 
-const fn padded_size_8(size: usize) -> usize {
-    (size + (1 << 2) - 1) & (usize::MAX - 0b0111)
-}
-
-fn aead_chacha20_poly1305(
+pub fn aead_chacha20_poly1305(
     aad: &[u8],
     key: &Key,
     nonce: &Nonce,

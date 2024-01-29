@@ -1,5 +1,9 @@
 use clap::{arg, command, value_parser};
-use poly1305::lib::chacha20::{chacha20, Key, Nonce};
+use poly1305::lib::{
+    chacha20::{Key, Nonce},
+    chacha_poly_aed::aead_chacha20_poly1305,
+    poly1305::le_string_from_integer,
+};
 
 fn main() {
     // deal with command line arguments
@@ -15,7 +19,12 @@ fn main() {
                 .value_parser(value_parser!(String)),
         )
         .arg(
-            arg!([PLAINTEXT_FILE] "name of the file containing the clear text to be encrypted (as binary data)")
+            arg!([AD_FILE] "name of the file containing the associated data (as binary data)")
+                .required(true)
+                .value_parser(value_parser!(String)),
+        )
+        .arg(
+            arg!([PLAINTEXT_FILE] "name of the file containing the plaintext to be encrypted (as binary data)")
                 .required(true)
                 .value_parser(value_parser!(String)),
         )
@@ -53,11 +62,16 @@ fn main() {
         .try_into()
         .unwrap();
 
+    let ad_file = matches.get_one::<String>("AD_FILE").unwrap();
+    let ad = std::fs::read(ad_file).expect("AD file not found");
+
     let plaintext_file = matches.get_one::<String>("PLAINTEXT_FILE").unwrap();
-    let plaintext = std::fs::read(plaintext_file).unwrap();
+    let plaintext = std::fs::read(plaintext_file).expect("Plaintext file not found");
 
     let cipher_file = matches.get_one::<String>("CIPHER_FILE").unwrap();
 
-    std::fs::write(cipher_file, chacha20(&key, 1, &nonce, &plaintext))
-        .expect("Could not write output in cipher file");
+    let (ciphertext, tag) = aead_chacha20_poly1305(&ad, &key, &nonce, &plaintext);
+
+    std::fs::write(cipher_file, &ciphertext).expect("Could not write output in cipher file");
+    print!("{}", le_string_from_integer(&tag));
 }
