@@ -12,5 +12,5 @@ copy:
 
 clean:
 	cargo clean
-	rm chacha20 poly1305-gen poly1305-check
+	rm chacha20 poly1305-gen poly1305-check aead_wrap aead_unwrap
 
