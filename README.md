@@ -11,13 +11,13 @@ This calls `cargo build --release` and copies binaries from `target/release/` in
 
 ## Running
 
-Run using `./poly1305-gen`, `./poly1305-check` or `./chacha20`.
+Run using `./poly1305-gen`, `./poly1305-check`, `./chacha20`, `./aead_wrap` or `./aead_unwrap`.
 
-For more usage information, run `./poly1305-{gen,check} --help` or `./chacha20 --help`.
+For more usage information, use `--help` on the relevant binary.
 
 ## Testing
 
-Run `cargo test` to check if `./poly1305-{gen,check}` and `./chacha20` produce the right output, comparing it with `openssl`.
+Run `cargo test` to check if the binaries produce the right output, checking `poly1305-{gen,check}` against `openssl` and the other binaries against the tests provided in the RFC.
 
 ## Project structure
 
