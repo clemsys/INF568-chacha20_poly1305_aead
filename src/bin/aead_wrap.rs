@@ -1,9 +1,9 @@
-use clap::{arg, command, value_parser};
-use poly1305::lib::{
+use chacha20_poly1305_aead::lib::{
     chacha20::{Key, Nonce},
     chacha_poly_aed::aead_chacha20_poly1305_wrap,
     poly1305::le_string_from_integer,
 };
+use clap::{arg, command, value_parser};
 
 fn main() {
     // deal with command line arguments

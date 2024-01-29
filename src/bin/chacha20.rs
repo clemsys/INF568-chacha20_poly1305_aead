@@ -1,5 +1,5 @@
+use chacha20_poly1305_aead::lib::chacha20::{chacha20, Key, Nonce};
 use clap::{arg, command, value_parser};
-use poly1305::lib::chacha20::{chacha20, Key, Nonce};
 
 fn main() {
     // deal with command line arguments
