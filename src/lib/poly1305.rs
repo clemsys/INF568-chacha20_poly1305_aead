@@ -15,7 +15,7 @@ pub fn le_string_from_integer(i: &Integer) -> String {
 }
 
 /// converts a little-endian hexadecimal string to a bytes array
-fn bytes_from_le_str(s: &str) -> Vec<u8> {
+fn bytes_from_str(s: &str) -> Vec<u8> {
     assert!(s.len() % 2 == 0);
     let bytes = s
         .chars()
@@ -28,8 +28,8 @@ fn bytes_from_le_str(s: &str) -> Vec<u8> {
 }
 
 /// converts a little-endian hexadecimal string to an integer
-fn integer_from_le_str(s: &str) -> Integer {
-    Integer::from_digits(&bytes_from_le_str(s), Order::Lsf)
+pub fn integer_from_le_str(s: &str) -> Integer {
+    Integer::from_digits(&bytes_from_str(s), Order::Lsf)
 }
 
 /// extracts r and s from the key (64-character little-endian hexadecimal string)
@@ -73,7 +73,7 @@ pub fn poly1305_tag(message: &[u8], key: &[u8]) -> Integer {
 /// generates the poly1305 tag for a given file and key
 pub fn poly1305_gen(filename: &str, key: &str) -> Integer {
     let file_bytes: Vec<u8> = std::fs::read(filename).expect("Could not read file");
-    poly1305_tag(&file_bytes, &bytes_from_le_str(key))
+    poly1305_tag(&file_bytes, &bytes_from_str(key))
 }
 
 /// checks if the provided poly1305 tag for a given file and key is correct

@@ -1,8 +1,8 @@
 use clap::{arg, command, value_parser};
 use poly1305::lib::{
     chacha20::{Key, Nonce},
-    chacha_poly_aed::aead_chacha20_poly1305_wrap,
-    poly1305::le_string_from_integer,
+    chacha_poly_aed::aead_chacha20_poly1305_unwrap,
+    poly1305::integer_from_le_str,
 };
 
 fn main() {
@@ -24,12 +24,12 @@ fn main() {
                 .value_parser(value_parser!(String)),
         )
         .arg(
-            arg!([PLAINTEXT_FILE] "name of the file containing the plaintext to be encrypted (as binary data)")
+            arg!([CIPHER_FILE] "name of the file containing the cipher text to be created (as binary data)")
                 .required(true)
                 .value_parser(value_parser!(String)),
         )
         .arg(
-            arg!([CIPHER_FILE] "name of the file containing the cipher text to be created (as binary data)")
+            arg!([TAG] "32-character hexadecimal string representing the tag to be verified")
                 .required(true)
                 .value_parser(value_parser!(String)),
         )
@@ -65,13 +65,16 @@ fn main() {
     let ad_file = matches.get_one::<String>("AD_FILE").unwrap();
     let ad = std::fs::read(ad_file).expect("AD file not found");
 
-    let plaintext_file = matches.get_one::<String>("PLAINTEXT_FILE").unwrap();
-    let plaintext = std::fs::read(plaintext_file).expect("Plaintext file not found");
+    let ciphertext_file = matches.get_one::<String>("CIPHER_FILE").unwrap();
+    let ciphertext = std::fs::read(ciphertext_file).expect("Ciphertext file not found");
 
-    let cipher_file = matches.get_one::<String>("CIPHER_FILE").unwrap();
+    let auth_tag_str = matches.get_one::<String>("TAG").unwrap();
+    let auth_tag = integer_from_le_str(&auth_tag_str);
 
-    let (ciphertext, tag) = aead_chacha20_poly1305_wrap(&ad, &key, &nonce, &plaintext);
-
-    std::fs::write(cipher_file, &ciphertext).expect("Could not write output in cipher file");
-    print!("{}", le_string_from_integer(&tag));
+    match aead_chacha20_poly1305_unwrap(&ad, &key, &nonce, &ciphertext, &auth_tag) {
+        Some(plaintext) => {
+            print!("{}", std::str::from_utf8(&plaintext).unwrap());
+        }
+        None => {}
+    }
 }

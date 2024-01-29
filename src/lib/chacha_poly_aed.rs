@@ -4,7 +4,7 @@ use super::{
 };
 use rug::Integer;
 
-fn poly1305_key_gen(key: &Key, nonce: &Nonce) -> [u8; 32] {
+pub fn poly1305_key_gen(key: &Key, nonce: &Nonce) -> [u8; 32] {
     chacha20_block(key, nonce, 0)[0..32].try_into().unwrap()
 }
 
@@ -12,22 +12,14 @@ const fn padded_size_16(size: usize) -> usize {
     (size + (1 << 4) - 1) & (usize::MAX - 0xf)
 }
 
-pub fn aead_chacha20_poly1305(
-    aad: &[u8],
-    key: &Key,
-    nonce: &Nonce,
-    plaintext: &[u8],
-) -> (Vec<u8>, Integer) {
-    let poly_key = poly1305_key_gen(key, nonce);
-    let ciphertext = chacha20(key, 1, nonce, plaintext);
-
+fn mac_data(aad: &[u8], ciphertext: &[u8]) -> Vec<u8> {
     let mut mac_data: Vec<u8> = Vec::new();
 
     let mut padded_aad = aad.to_vec();
     padded_aad.resize(padded_size_16(aad.len()), 0);
     mac_data.append(&mut padded_aad);
 
-    let mut padded_ciphertext = ciphertext.clone();
+    let mut padded_ciphertext = ciphertext.to_vec();
     padded_ciphertext.resize(padded_size_16(padded_ciphertext.len()), 0);
     mac_data.append(&mut padded_ciphertext);
 
@@ -39,21 +31,51 @@ pub fn aead_chacha20_poly1305(
     padded_ciphertext_len.resize(8, 0);
     mac_data.append(&mut padded_ciphertext_len);
 
+    mac_data
+}
+
+pub fn aead_chacha20_poly1305_wrap(
+    aad: &[u8],
+    key: &Key,
+    nonce: &Nonce,
+    plaintext: &[u8],
+) -> (Vec<u8>, Integer) {
+    let poly_key = poly1305_key_gen(key, nonce);
+    let ciphertext = chacha20(key, 1, nonce, plaintext);
+    let mac_data = mac_data(aad, &ciphertext);
+
     (ciphertext, poly1305_tag(&mac_data, &poly_key))
+}
+
+pub fn aead_chacha20_poly1305_unwrap(
+    aad: &[u8],
+    key: &Key,
+    nonce: &Nonce,
+    ciphertext: &[u8],
+    auth_tag: &Integer,
+) -> Option<Vec<u8>> {
+    let tag = poly1305_tag(&mac_data(aad, ciphertext), &poly1305_key_gen(key, nonce));
+    if tag == *auth_tag {
+        Some(chacha20(key, 1, nonce, ciphertext))
+    } else {
+        None
+    }
 }
 
 #[cfg(test)]
 mod test {
+    use crate::lib::poly1305::integer_from_le_str;
+
     use super::super::poly1305::le_string_from_integer;
     use super::*;
 
     #[test]
     fn test_poly1305_keygen() {
-        let key: Key = [
+        let key = [
             0x83828180, 0x87868584, 0x8b8a8988, 0x8f8e8d8c, 0x93929190, 0x97969594, 0x9b9a9998,
             0x9f9e9d9c,
         ];
-        let nonce: Nonce = [0x00000000, 0x03020100, 0x07060504];
+        let nonce = [0x00000000, 0x03020100, 0x07060504];
         let poly_key = poly1305_key_gen(&key, &nonce);
         let expected_poly_key = [
             0x8a, 0xd5, 0xa0, 0x8b, 0x90, 0x5f, 0x81, 0xcc, 0x81, 0x50, 0x40, 0x27, 0x4a, 0xb2,
@@ -86,11 +108,33 @@ mod test {
             0x61, 0x16,
         ];
 
-        let (ciphertext, tag) = aead_chacha20_poly1305(&aad, &key, &nonce, &plaintext);
+        let (ciphertext, tag) = aead_chacha20_poly1305_wrap(&aad, &key, &nonce, &plaintext);
         assert_eq!(
             le_string_from_integer(&tag),
             "1ae10b594f09e26a7e902ecbd0600691"
         );
         assert_eq!(ciphertext, expected_ciphertext);
+    }
+
+    #[test]
+    fn test_aead_chacha20_poly1305_unwrap() {
+        let aad = [
+            0x50, 0x51, 0x52, 0x53, 0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7,
+        ];
+        let key = [
+            0x83828180, 0x87868584, 0x8b8a8988, 0x8f8e8d8c, 0x93929190, 0x97969594, 0x9b9a9998,
+            0x9f9e9d9c,
+        ];
+        let nonce = [0x00000007, 0x43424140, 0x47464544];
+        let ciphertext = std::fs::read("tests/samples/aead/ciphertext.bin").unwrap();
+        let auth_tag = integer_from_le_str("1ae10b594f09e26a7e902ecbd0600691");
+        match aead_chacha20_poly1305_unwrap(&aad, &key, &nonce, &ciphertext, &auth_tag) {
+            Some(plaintext) => {
+                let expected_plaintext =
+                    std::fs::read_to_string("tests/samples/chacha20/sunscreen.txt").unwrap();
+                assert_eq!(std::str::from_utf8(&plaintext).unwrap(), expected_plaintext);
+            }
+            None => panic!("Invalid tag"),
+        }
     }
 }
