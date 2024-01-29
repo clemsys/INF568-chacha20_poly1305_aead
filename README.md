@@ -1,7 +1,7 @@
-# INF568 Assignment 3 - chacha20/poly1305
+# INF568 Assignment 2&3 - chacha20/poly1305 AEAD
 
 Author: [Clément CHAPOT](mailto:clement.chapot@polytechnique.edu) <br>
-Description: implementation of chacha20/poly1305 (see: [RFC 8439](https://datatracker.ietf.org/doc/html/rfc8439)) as part of INF568 course at École polytechnique
+Description: implementation of chacha20/poly1305 AEAD (see: [RFC 8439](https://datatracker.ietf.org/doc/html/rfc8439)) as part of INF568 course at École polytechnique
 
 ## Building
 

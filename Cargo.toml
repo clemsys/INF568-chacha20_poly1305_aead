@@ -1,11 +1,11 @@
 [package]
-name = "poly1305"
+name = "chacha20_poly1305_aead"
 version = "0.1.0"
 edition = "2021"
 authors = ["Clément CHAPOT <clement.chapot@polytechnique.edu>"]
-description = "poly1305 implementation following RFC 8439 for INF568 course at École polytechnique"
+description = "chacha20/poly1305 aead implementation following RFC 8439 for INF568 course at École polytechnique"
 readme = "README.md"
-repository = "https://github.com/clemsys/INF568-poly1305"
+repository = "https://github.com/clemsys/INF568-chacha20_poly1305_aead"
 license = "MIT OR Apache-2.0"
 categories = ["algorithms", "cryptography", "command-line-utilities"]
 
